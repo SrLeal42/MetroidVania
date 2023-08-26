@@ -1,0 +1,5 @@
+if(!imunidade){
+if (timer_dano == tempo_dano){
+	toma_dano(1, 15);
+}
+}
