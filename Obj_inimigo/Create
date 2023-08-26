@@ -1,0 +1,231 @@
+
+estado = noone;
+
+
+vida = vida_max;
+
+
+vel = vel_max;
+velh = 0;
+velv = 0;
+
+sprite = sprite_index;
+xscale = image_xscale;
+yscale = image_yscale;
+
+dano_tempo = room_speed/2;
+dano_timer = dano_tempo;
+dano = false;
+
+alvo = noone;
+
+tempo_ataque = room_speed/2;
+timer_ataque = 0;
+
+sat = 0; //variavel que controla a saturação do inimigo no estado prepara ataque
+
+larg_ataque = 0;
+alt_ataque = 0;
+
+
+
+
+desenha_sprite = function(){
+	//se estiver tomando dano se desenha diferente.
+	if (dano){
+		
+		if (dano_timer mod 2 > 0){
+			image_blend = c_red;
+			draw_sprite_ext(sprite_index, image_index, x, y, xscale, yscale, image_angle, image_blend, image_alpha);
+			image_blend = c_white;
+		} else{
+			draw_sprite_ext(sprite_index, image_index, x, y, xscale, yscale, image_angle, image_blend, image_alpha);
+		}
+		
+		
+		
+	} else {
+		draw_sprite_ext(sprite_index, image_index, x, y, xscale, yscale, image_angle, image_blend, image_alpha);
+	}
+	
+	
+}
+
+
+morrendo = function(){
+	velh = 0;
+	velv = 0;
+	image_speed = 0;
+	
+	image_alpha -= .04;
+	
+	instance_destroy(Obj_ataque_inimigo);
+	
+	if (image_alpha <= .3){
+		instance_destroy();
+	}
+}
+
+
+
+
+atacando = function(){
+	
+	image_blend = c_white;
+	
+	static _sprite_inicial = sprite_index;
+	
+	sprite = _sprite_inicial;
+	
+	sprite_index = Spr_inimigo1_ataque_direita;
+	
+	if (!instance_exists(Obj_ataque_inimigo) && timer_ataque <= 0){
+		var objatac = instance_create_layer(x + (sprite_width/2 * larg_ataque) , y + (sprite_height/2 * alt_ataque), layer, Obj_ataque_inimigo);
+		objatac.image_xscale = larg_ataque;
+	}
+			//resetando o timer;
+			timer_ataque = tempo_ataque;
+	
+}
+
+prepara_ataque = function(){
+	velh = 0;
+	
+	
+	
+	if (sat < 1){
+		sat += 0.05;
+	}
+	
+	image_blend = make_color_hsv(255, sat * 255, 255);
+
+	if(sat >= 1){
+		sat = 0;
+		estado = atacando;
+	}
+	
+}
+
+
+
+
+
+perseguindo = function(){
+	
+	if (distance_to_object(alvo) <= 10){
+		velh = 0;
+		if(timer_ataque <= 0){
+			estado = prepara_ataque;
+			
+		}
+	} else{
+		
+		var _dir = sign(alvo.x - x);
+	
+		velh = vel_max * _dir;
+	
+		var _velh = sign(velh);
+	}
+
+	if (place_meeting(x+ velh, y,Obj_colisao)){
+
+	while(!place_meeting(x+_velh, y, Obj_colisao)){
+		x += _velh; 
+	}
+
+	velh = 0;
+
+
+	}
+	
+	x += velh;
+	
+}
+
+
+
+andando = function(){
+	
+	
+var _alvo = collision_rectangle(x, y - (sprite_height/2), x +(sprite_width *6)*xscale, y, Obj_Player, false, false);
+
+if (_alvo){
+	alvo = _alvo;
+	estado = perseguindo;
+}
+
+if (alvo){
+	estado = perseguindo;
+}
+
+	
+	
+	velh = vel;
+	
+	
+	
+var _velh = sign(velh);
+
+if (place_meeting(x+_velh, y, Obj_colisao) or !place_meeting(x+(10*_velh), y+10, Obj_colisao)){
+	vel = vel * -1;
+	velh = vel;
+}
+	
+	
+	
+	
+	x += velh;
+	//y += velv;
+	
+}
+
+
+toma_dano = function(_dano, _knockback){
+	dano = true;
+	//resetando o timer de ataque para evitar que ele ataque logo em seguida que toma o dano
+	timer_ataque = tempo_ataque;
+	
+	var _dir = point_direction(other.x, other.y, x, y);
+	
+	velh = lengthdir_x(_knockback, _dir);
+	velv = lengthdir_y((_knockback/2)* -1, _dir);
+	
+	if (place_meeting(x, y+velv, Obj_colisao)){
+	velv = 0;
+	}
+	
+	if (place_meeting(x+velh, y, Obj_colisao)){
+	velh = 0;
+	}
+	
+	
+	x += velh;
+	y += velv;
+	
+	if (_dano == undefined){
+		vida -= 1;
+	} else {
+		vida -= _dano;
+	}
+	
+	
+	
+	
+	
+	if (vida <= 0){
+		estado = morrendo;
+	}
+	
+	var objdano = instance_create_layer(x, y-(sprite_height/1.5), layer, Obj_dano);
+	objdano.dano = _dano;
+	
+	
+	/*
+	part_emitter_region(sistema, emissor, x, x, y, y, ps_shape_line, ps_distr_linear);
+	part_emitter_burst(sistema, emissor, tipo, 1);
+	*/
+	
+}
+
+
+estado = andando;
