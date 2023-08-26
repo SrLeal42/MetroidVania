@@ -1,0 +1,7 @@
+
+if(sprite_index == Spr_inimigo1_ataque_direita){
+	instance_destroy(Obj_ataque_inimigo);
+	image_index = 0;
+	sprite_index = sprite;
+	estado = perseguindo;
+}
