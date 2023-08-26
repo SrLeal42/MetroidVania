@@ -1,0 +1,42 @@
+	
+	
+	x = Obj_Player.x;
+	y = Obj_Player.y;
+	
+	//criando uma lista
+	var inimigos_na_hitbox = ds_list_create();
+	
+	//caso o inimigo encosta na hitbox ele é adicionado na lista
+	var inimigos = instance_place_list(x, y, Obj_inimigo, inimigos_na_hitbox, false)
+	
+	//verifica se a lista ta vazia
+	if (inimigos > 0){
+		//um looping com a qunatidade de inimigos
+		for(var i = 0; i < inimigos; i++){
+			// uma varivel que vai conter os inimigos de cada posição da lista
+			var inimigoID = inimigos_na_hitbox[| i];
+			
+			
+			//procura se o inimigo esta na lista
+			if(ds_list_find_index(inimigos_atingidos, inimigoID) == -1){
+				//caso não esteja adiciona
+				ds_list_add(inimigos_atingidos, inimigoID);
+				
+				
+				
+				with(inimigoID){
+					toma_dano(2, 20);
+					alvo = Obj_Player;
+				}
+				
+			}
+			
+		}
+	}
+	
+	ds_list_destroy(inimigos_na_hitbox);
+/*
+	if (Obj_Player.image_index >= sprite_get_number(Obj_Player) -1){
+		instance_destroy();
+	}
+*/	
