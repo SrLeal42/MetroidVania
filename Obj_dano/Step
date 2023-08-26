@@ -1,0 +1,8 @@
+alpha -= 0.04
+y -= 2;
+
+if(alpha <= 0.3){
+
+	instance_destroy();
+
+}
