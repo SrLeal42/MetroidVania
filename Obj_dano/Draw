@@ -1,0 +1,5 @@
+
+draw_set_font(Ft_dano);
+//draw_set_alpha(alpha);
+draw_text_ext_color(x, y, dano, 100, 100, c_red, c_red,c_red,c_red, alpha);
+//draw_set_alpha(1);
