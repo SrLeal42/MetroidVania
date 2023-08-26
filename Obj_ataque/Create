@@ -1,0 +1,2 @@
+
+inimigos_atingidos = ds_list_create();// lista utilizada no ataque.
