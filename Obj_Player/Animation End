@@ -1,0 +1,31 @@
+
+instance_destroy(Obj_ataque);
+// verifica se o sprite sendo usado é o do ataque
+if(sprite_index == _sprite_final){
+	//destroi o objeto ataque
+	instance_destroy(Obj_ataque);
+	// volta para o sprite original
+	sprite_index = sprite;
+	// volta para HitBox original
+	mask_index = sprite;
+	if(keyboard_check(ord("K")) && combo < 2){
+		combo++;
+		
+		var up = keyboard_check(ord("W"));
+		var down = keyboard_check(ord("S"));
+		var right = keyboard_check(ord("D"));
+		var left = keyboard_check(ord("A"));
+		
+		qual_ataque = (0*right) + (1*up) + (2*down) + (3*left);
+		if(qual_ataque >3){
+			qual_ataque = 0;	
+		}
+		ds_list_clear(inimigos_atingidos);
+		estado = atacando;
+	} else{
+		// volta para o estado original
+		estado = idle;
+	}
+	
+		
+}
