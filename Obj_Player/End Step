@@ -1,0 +1,36 @@
+
+var _velh = sign(velh);
+
+
+if (place_meeting(x+ velh, y,Obj_colisao)){
+
+while(!place_meeting(x+_velh, y, Obj_colisao)){
+	x += _velh; 
+}
+
+velh = 0;
+
+
+}
+
+
+
+
+var _velv = sign(velv);
+
+
+
+if (place_meeting(x, y+velv, Obj_colisao)){
+	
+	while(!place_meeting(x, y+_velv, Obj_colisao)){
+		y += _velv;
+	}
+	
+	velv = 0;
+	pulos = pulos_max;
+
+
+}
+
+x += velh;
+y += lerp(0, velv, .5);
