@@ -1,0 +1,8 @@
+dano = -1;
+//alvo = noone;
+
+alpha = 1;
+
+
+//_x = alvo.x;
+//_y = alvo.y;
