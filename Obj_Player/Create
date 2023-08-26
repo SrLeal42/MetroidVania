@@ -1,0 +1,348 @@
+
+vel_max = 2;
+vel = vel_max;//velocidade variavel
+vel_pulo = -70;
+velh = 0;//velocidade que faz verdadeira o objeto se mexer
+velv = 0;
+mov_dir = 0;
+global.grav = 15;
+
+pulos_max = 1;
+pulos = pulos_max;
+
+vida_max = 10;
+vida = vida_max;
+
+arma = Obj_arma1;
+qual_ataque = 0;// variavel que troca o lado da sprite que estou atacando.
+alt_ataque = 1;//variavel que troca a altura do ataque.
+larg_ataque =1;// variavel que troca a largura do ataque.
+
+sprite = sprite_index;
+xscale = image_xscale;
+yscale = image_yscale;
+_sprite_final = 0; //variavel utilizada para trocar a sprite do personagem.
+
+
+estado = noone;
+
+tempo_ataque = room_speed /3;
+timer_ataque = 0;
+
+tempo_defesa = room_speed /4;
+timer_defesa = 0;
+duracao_defesa = room_speed/3;
+
+
+dano = false;
+tempo_dano = room_speed;
+timer_dano = tempo_dano;
+
+
+inimigos_atingidos = ds_list_create();// lista utilizada no ataque.
+
+combo = 0; //varivel utilizada para o sistema de combo.
+
+imunidade = false;
+
+dash_tempo = room_speed;//cooldown do dash
+dash_timer = 0;//timer do cooldown
+duracao_dash = room_speed/3; // tempo de duração do dash
+timer_duracao_dash = duracao_dash;// timer de duração do dash
+
+#region particula Defesa
+sistema_def = part_system_create();
+tipo_def = part_type_create();
+emissor_def = part_emitter_create(sistema_def);
+
+
+part_type_speed(tipo_def, 5, 5, 0, 0);
+part_type_direction(tipo_def, 0,360,0,0);
+part_type_size(tipo_def, 4, 4, 0, 0);
+part_type_life(tipo_def, 10, 10);
+part_type_color_mix(tipo_def, c_blue, c_aqua);
+
+
+#endregion
+
+
+
+
+#region particula dash
+
+sistema_dash = part_system_create();
+tipo_dash = part_type_create();
+emissor_dash = part_emitter_create(sistema_dash);
+
+part_type_life(tipo_dash, 5, 5);
+part_type_color1(tipo_dash, c_aqua);
+part_type_alpha1(tipo_dash, .05);
+part_type_speed(tipo_dash, 5, 5, 0, 0);
+part_type_sprite(tipo_dash, Spr_Player, true, false, false);
+
+#endregion
+
+
+desenha_sprite = function(){
+	if (dano){
+		
+		if (timer_dano mod 2 > 0){
+			image_blend = c_red;
+			draw_sprite_ext(sprite_index, image_index, x, y, xscale, yscale, image_angle, image_blend, image_alpha);
+			image_blend = c_white;
+		} else{
+			draw_sprite_ext(sprite_index, image_index, x, y, xscale, yscale, image_angle, image_blend, image_alpha);
+		}
+		
+		
+		
+	} else {
+		draw_sprite_ext(sprite_index, image_index, x, y, xscale, yscale, image_angle, image_blend, image_alpha);
+	}
+}
+
+toma_dano = function(_dano, _knockback){
+	dano = true;
+	if (_knockback == undefined){
+		_knockback = 0;
+	}
+	
+	
+	var _dir = point_direction(other.x, other.y, x, y);
+	
+	velh = lengthdir_x(_knockback, _dir);
+	velv = lengthdir_y(_knockback, _dir);
+	
+	var _velv = sign(velv);
+	
+	if (place_meeting(x, y+velv, Obj_colisao)){
+	
+	while(!place_meeting(x+_velv, y, Obj_colisao)){
+	x += _velv; 
+	}
+	
+	velv = 0;
+	}
+	
+	var _velh = sign(velh);
+	
+	if (place_meeting(x+velh, y, Obj_colisao)){
+	
+	while(!place_meeting(x+_velh, y, Obj_colisao)){
+	x += _velh; 
+	}
+	
+	velh = 0;
+	}
+	
+	
+	x += velh;
+	y -= velv;
+	
+	if (_dano == undefined){
+		vida -= 1;
+	} else {
+		vida -= _dano;
+	}
+	
+}
+
+
+dash = function(){
+	
+	imunidade = true;
+	velh = lerp(0, 7*xscale, 0.3);
+	
+	if (place_meeting(x, y+velv, Obj_colisao)){
+	velv = 0;
+	}
+	
+	if (place_meeting(x+velh, y, Obj_colisao)){
+	velh = 0;
+	}
+	
+	x += velh
+	part_type_direction(tipo_dash, 180*(xscale > 0), 180*(xscale > 0), 0, 0);
+	part_emitter_region(sistema_dash, emissor_dash, x, x, y, y, ps_shape_line, ps_distr_linear);
+	part_emitter_burst(sistema_dash, emissor_dash, tipo_dash, 7);
+	if(timer_duracao_dash <= 0){
+		timer_duracao_dash = duracao_dash;
+		estado = idle;
+	} 
+	timer_duracao_dash --;
+}
+
+
+idle = function(){
+	
+	
+	sprite_index = Spr_Player;
+	mask_index = Spr_Player;
+	
+combo = 0; //resetando o combo
+imunidade = false; //resetando a imunidade;
+
+var up, right, left, shift;
+
+up = keyboard_check_pressed(vk_space);
+right = keyboard_check(ord("D"));
+left = keyboard_check(ord("A"));
+shift = keyboard_check(vk_shift);
+
+if (place_meeting(x,y +1, Obj_colisao)){
+	if (shift){
+		if(dash_timer <= 0){
+			dash_timer = dash_tempo;
+			estado = dash;
+		}
+	}
+}
+if (right xor left){
+	mov_dir = point_direction(0, 0, (right - left), 0);
+	vel = lerp(vel, vel_max, .5);
+} else if (velh != 0){
+	vel = lerp(vel, 0, .2);
+}
+
+
+#region Olhando Mouse
+if (velh > 0){
+	xscale = 1;
+} else if(velh < 0) {
+	xscale = -1;
+}
+
+
+
+#endregion
+
+
+if (up){
+	if (pulos > 0){
+		if (place_meeting(x,y +1, Obj_colisao)){
+			velv = lerp(velv, vel_pulo, .5);
+			pulos -= 1;
+		}
+	}
+} 
+}
+
+
+//estado atacando
+atacando = function(){
+	
+
+	//fica parado
+	vel = lerp(vel, 0, .25)
+	//deixando o player olhando para o local correto
+	xscale = 1;
+	//variavel para pegar a sprite que está no momento que iniciou a ação 
+	static _sprite_inicial = sprite_index;
+	//outra variavel que impede que o sprite mude
+	sprite = _sprite_inicial;
+	
+	//verifica qual arma está sendo utilizada
+	switch(arma){
+						//pega o sprite do ataque respectivo a arma.  		
+		case Obj_arma1: _sprite_final = Obj_control_arma.escolhe_arma(arma, qual_ataque);
+		break;
+	}
+	
+	//sprite é trocado 
+	sprite_index = _sprite_final;
+	//mask_index = _HB_final;
+	
+	image_speed = 150/room_speed;
+	
+	var up = keyboard_check(ord("W"));
+	var down = keyboard_check(ord("S"));
+	var right = keyboard_check(ord("D"));
+	var left = keyboard_check(ord("A"));
+	
+	if (!instance_exists(Obj_ataque)){
+		//var objatac = instance_create_layer(x + (sprite_width/2 * (1 * (-(left) + (!left * !(up or down)) ))  ) , y + (sprite_height/2 * (-(up) + (down))), layer, Obj_ataque);
+		//if(left) {objatac.image_xscale = -1} 
+		var objatac = instance_create_layer(x, y, layer, Obj_ataque);
+		if(!up && !down){
+			if(left) {objatac.image_xscale = -1} 
+		} else if(up){
+			objatac.sprite_index = Spr_ataque_cima_arma1HB;
+		} else if(down){
+			objatac.sprite_index = Spr_ataque_baixo_arma1HB;
+		}
+	}
+	
+			//resetando o timer;
+			timer_ataque = tempo_ataque;
+
+}
+
+defendendo = function(){
+	
+	
+	imunidade = true;
+	
+	duracao_defesa --;
+	
+	sprite_index = Spr_defesa;
+	if(xscale > 0){
+		mask_index = Spr_defesa_direita_HB;
+	} else if(xscale < 0){
+		mask_index = Spr_defesa_esquerda_HB;
+	}
+	
+	vel = lerp(vel, 0, .3);
+	
+	var part = true;
+	
+	
+	if(place_meeting(x,y, Obj_ataque_inimigo)){
+		
+		if(part){
+			part_emitter_region(sistema_def, emissor_def, x + (24 * xscale), x + (24 * xscale), y - 30, y - 30, ps_shape_ellipse, ps_distr_gaussian);
+			part_emitter_burst(sistema_def, emissor_def, tipo_def, 50);
+			part = false;
+		}
+		
+		var _dir = point_direction(Obj_ataque_inimigo.x, Obj_ataque_inimigo.y, x, y);
+	
+		velh = lengthdir_x(20, _dir);
+		//velv = lengthdir_y(20, _dir);
+		/*
+		if (place_meeting(x, y+velv, Obj_colisao)){
+		velv = 0;
+		}
+		*/
+		
+		if (place_meeting(x+velh, y, Obj_colisao)){
+		velh = 0;
+		}
+	
+	
+		x += lerp(0, velh, .35);
+		//y -= velv;
+		
+		
+	}
+	
+	
+
+	
+	
+	if(duracao_defesa <= 0){
+		duracao_defesa = room_speed/3;
+		estado = idle;
+	}
+	
+	
+	
+}
+
+
+
+
+
+
+
+
+estado = idle
