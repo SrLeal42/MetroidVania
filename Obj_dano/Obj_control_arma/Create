@@ -1,0 +1,19 @@
+  //Objeto criado exclusivamente para controlar todas as armas do jogo
+
+spr_arma1_ataques = [Spr_ataque_direita_arma1, Spr_ataque_cima_arma1, Spr_ataque_baixo_arma1, Spr_ataque_esquerda_arma1];
+spr_arma1_HB = [Spr_ataque_direita_arma1HB, Spr_ataque_cima_arma1HB, Spr_ataque_baixo_arma1HB, Spr_ataque_esquerda_arma1HB]
+
+
+escolhe_arma = function( _arma ,_qual_ataque){
+	switch(_arma){
+		case Obj_arma1: return spr_arma1_ataques[_qual_ataque];
+		break;
+	}
+}
+
+escolhe_hitbox = function(_arma,_qual_ataque){
+	switch(_arma){
+		case Obj_arma1: return spr_arma1_HB[_qual_ataque];
+		break;
+	}
+}
